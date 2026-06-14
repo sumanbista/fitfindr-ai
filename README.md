@@ -2,6 +2,8 @@
 
 This starter kit contains everything you need to begin Project 2.
 
+FitFindr takes a natural-language thrifting request and runs it through a planning loop that calls tools in response to what each step returns: the parsed query triggers search_listings, a successful match triggers suggest_outfit against the user's wardrobe, and a valid outfit triggers create_fit_card to produce a shareable caption. Each tool owns its failure mode — if search_listings finds nothing the agent stops and asks the user to loosen their size/price/keywords rather than calling the next tool with empty input; if the wardrobe is empty suggest_outfit falls back to general styling advice instead of specific combos; and if create_fit_card receives a missing or empty outfit it returns a clear error message instead of crashing. State flows through a single session dict, so the item found in step one is carried into the outfit and fit-card steps without the user re-entering anything.
+
 ## What's Included
 
 ```
