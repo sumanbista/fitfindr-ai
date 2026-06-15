@@ -100,7 +100,7 @@ The loop is driven by what each tool returns and the current state of the sessio
 
 1. **Initialize.** Call `_new_session(query, wardrobe)`. `session["error"]` starts as `None`; the loop only continues while it stays `None`.
 
-2. **Parse the query.** Extract `description`, `size`, `max_price` from `query` and store them in `session["parsed"]`.
+2. **Parse the query.** Extract `description`, `size`, `max_price` from `query` and store them in `session["parsed"]`. **Parsing method:** deterministic regex (`_parse_query` in `agent.py`), not an LLM — chosen so the parse step is fast, offline, and unit-testable. It pulls a price ceiling (`"under $30"`, `"$25"`, `"below 40"`), a size (`"size M"`, `"in size 8"`), and treats the remaining words (price/size phrases and lead-in filler like "looking for" stripped) as the description.
    - *Branch:* if no usable `description` could be extracted (empty/whitespace), set `session["error"]` ("Tell me what kind of item you're looking for") and `return session`. Don't call any tool.
 
 3. **Decide: search.** Because we have a valid description, call `search_listings(description, size, max_price)` and store the list in `session["search_results"]`.
