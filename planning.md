@@ -219,7 +219,19 @@ flowchart TD
 
 **Milestone 3 — Individual tool implementations:**
 
+**AI tool used:** Claude (via Claude Code), working directly in the repo.
+
+- **`search_listings`** — I'll give Claude the **Tool 1** block from planning.md (the `description`/`size`/`max_price` inputs, the `list[dict]` return with its field list, and the "returns `[]`, never raises" failure mode) plus the `load_listings()` signature from `utils/data_loader.py`. I expect a pure local function that filters by `max_price` (inclusive) and `size` (case-insensitive substring), keyword-scores the survivors against `description`, drops zero-score listings, and returns them sorted highest-first. **Verify before trusting:** read the code to confirm all three parameters are applied and the empty case returns `[]`; then run it in isolation on 3 queries — `"vintage graphic tee"` + `max_price=30` (expect ≥1 hit, `result[0]['id'] == "lst_006"`), a deliberate no-match (`"designer ballgown" max_price=5` → `[]`), and a size filter (`size="M"` only returns `S/M`-type matches).
+
+- **`suggest_outfit`** — I'll give Claude the **Tool 2** block including its **Prompt design** note (system role, named-item rule, empty-wardrobe variant, temp ~0.7) and the wardrobe item schema (`name`/`category`/`colors`/`style_tags`/`notes`). I expect a function that branches on `wardrobe["items"]` being empty, builds the right prompt, calls Groq, and returns a non-empty string (or signals failure for the loop to hard-stop). **Verify:** run it twice with a hardcoded `new_item` (`lst_006`) — once with `get_example_wardrobe()` (output must name real pieces like "baggy straight-leg jeans") and once with `get_empty_wardrobe()` (output must give general advice and *not* invent owned items).
+
+- **`create_fit_card`** — I'll give Claude the **Tool 3** block and its **Prompt design** note (OOTD voice, name/price/platform once each, 2–4 sentences, temp ~0.9) plus the missing-outfit guard. I expect a function that short-circuits on empty `outfit`, otherwise calls Groq and returns a caption. **Verify:** call it with a hardcoded outfit string + `lst_006` and confirm the caption mentions "$24" and "depop" exactly once each and is 2–4 sentences; call it twice to confirm the output varies; call it with `outfit=""` and confirm it returns the guard string with no LLM call.
+
 **Milestone 4 — Planning loop and state management:**
+
+**AI tool used:** Claude (via Claude Code).
+
+- I'll give Claude the **Planning Loop** section (the numbered branch logic), the **State Management** section (the session-dict field table), the **Architecture** Mermaid diagram, and the existing `_new_session()` stub in `agent.py`. I expect an implementation of `run_agent()` that follows the branches exactly: parse → guard, search → empty-list hard-stop, select `results[0]`, `suggest_outfit` → LLM-failure hard-stop, `create_fit_card` → failure hard-stop, else return a fully-populated session — with `session["error"]` as the single continue guard and every intermediate result written to the session. **Verify:** run the two scenarios already stubbed in `agent.py`'s `__main__` — the happy path (`"vintage graphic tee under $30"` → all three of `selected_item`, `outfit_suggestion`, `fit_card` populated, `error is None`) and the no-results path (`"designer ballgown size XXS under $5"` → `error` set, downstream fields `None`, and `suggest_outfit` never called). I'll confirm the found item flows into styling without re-entry by checking `selected_item` is the same dict passed to both later tools.
 
 ---
 
